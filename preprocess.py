@@ -1,5 +1,5 @@
 """
-This is project code.
+This is project code for pre-processing.
 """
 
 import pandas as pd
