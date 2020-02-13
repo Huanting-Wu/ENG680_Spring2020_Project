@@ -20,6 +20,10 @@ if __name__ == '__main__':
 
     print('df_price_labeled_path:', df_price_labeled_path)
 
-    df_merged, df_merged_path = utils.merge_price_news(df_price=df_price_labeled, df_news=df_news_full)
+    df_merged, df_merged_path = utils.merge_format_price_news(df_price=df_price_labeled, df_news=df_news_full)
 
     print('df_merged_path:', df_merged_path)
+
+    df_merged = utils.convert_data_type(df_merged=df_merged)
+
+    print('df_merged.dtypes:', df_merged.dtypes)
