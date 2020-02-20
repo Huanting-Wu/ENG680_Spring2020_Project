@@ -25,5 +25,3 @@ if __name__ == '__main__':
     print('df_merged_path:', df_merged_path)
 
     df_merged = utils.convert_data_type(df_merged=df_merged)
-
-    print('df_merged.dtypes:', df_merged.dtypes)
