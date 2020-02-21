@@ -2,9 +2,11 @@
 This is main.
 """
 
-import utils as utils
+from utils import ProjectUtils
 
 if __name__ == '__main__':
+    utils = ProjectUtils()
+
     df_news_cleaned, df_news_cleaned_path = utils.clean_export_news_file()
     print('df_news_cleaned_path:', df_news_cleaned_path)
 

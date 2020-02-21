@@ -1,130 +1,253 @@
 """
-This is project utils.
+This is project utils file.
 """
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 import reference
 
 
-def clean_byte_encode_in_df(df, use_col_name_list):
-    for col_name in use_col_name_list:
-        df[col_name] = df[col_name].str.replace('b', '')
-    return df
+class ProjectUtils(object):
+    """
+    This is project utils class
+    """
 
+    def __init__(self):
+        self.attribute_list = [func for func in dir(ProjectUtils) if
+                               callable(getattr(ProjectUtils, func)) and func.startswith('__')]
+        self.method_list = [func for func in dir(ProjectUtils) if
+                            callable(getattr(ProjectUtils, func)) and not func.startswith('__')]
 
-def read_csv_regular(csv_file_path, use_col_list=None):
-    try:
-        df = pd.read_csv(csv_file_path, dtype='str', usecols=use_col_list, sep=',', encoding='utf-8', na_values=None,
-                         keep_default_na=True)
-    except UnicodeDecodeError:
-        df = pd.read_csv(csv_file_path, dtype='str', usecols=use_col_list, sep=',', encoding='ISO-8859-1',
-                         na_values=None, keep_default_na=True)
-    return df
+    def __clean_byte_encode_in_df(self, df, use_col_name_list):
+        """
+        Remove byte encoding symbol before strings in data set.
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Input Pandas DataFrame.
+        use_col_name_list : list of str
+            Column names with strings to clean.
+        Returns
+        -------
+        df : pd.DataFrame
+            pd.DataFrame. Pandas DataFrame with byte encoding symbol removed.
+        """
+        for col_name in use_col_name_list:
+            df[col_name] = df[col_name].str.replace('b', '')
+        return df
 
+    def __read_csv_regular(self, csv_file_path, use_col_list=None):
+        """
+        Create pd.DataFrame from csv file path.
+        Parameters
+        ----------
+        csv_file_path : str
+            Absolute path of input csv file.
+        use_col_list : list of str
+            Column names with strings to clean.
+        Returns
+        -------
+        df : pd.DataFrame
+            pd.DataFrame.
+        """
+        try:
+            df = pd.read_csv(csv_file_path, dtype='str', usecols=use_col_list, sep=',', encoding='utf-8',
+                             na_values=None,
+                             keep_default_na=True)
+        except UnicodeDecodeError:
+            df = pd.read_csv(csv_file_path, dtype='str', usecols=use_col_list, sep=',', encoding='ISO-8859-1',
+                             na_values=None, keep_default_na=True)
+        return df
 
-def export_df_as_csv_ignore_index(df, export_csv_path):
-    df.to_csv(export_csv_path, index=False)
-    return export_csv_path
+    def __export_df_as_csv_ignore_index(self, df, export_csv_path):
+        """
+        Export a pd.DataFrame as csv without index column.
+        Parameters
+        ----------
+        df : pd.DataFrame
+            pd.DataFrame. Pandas DataFrame to export.
+        export_csv_path : str
+            str. Absolute path of export csv file.
+        Returns
+        -------
+        export_csv_path : str
+            str. Absolute path of exported csv file.
+        """
+        df.to_csv(export_csv_path, index=False)
+        return export_csv_path
 
+    def clean_export_news_file(self, ):
+        """
+        Clean and export news data set.
+        This is main method for pre-processing news data set.
+        Parameters
+        ----------
 
-def clean_export_news_file():
-    df_news = read_csv_regular(csv_file_path=reference.NEWS_INPUT_PATH)
-    df_news = clean_byte_encode_in_df(df=df_news, use_col_name_list=reference.TOP_NEWS_COL_NAME_LIST)
-    df_news_path = export_df_as_csv_ignore_index(df=df_news, export_csv_path=reference.NEWS_CLEANED_EXPORT_PATH)
-    return df_news, df_news_path
+        Returns
+        -------
+        df_news : pd.DataFrame
+            pd.DataFrame. Pandas DataFrame with news data.
+        df_news_path : str
+            str. Absolute path of export file of news data.
+        """
+        df_news = self.__read_csv_regular(csv_file_path=reference.NEWS_INPUT_PATH)
+        df_news = self.__clean_byte_encode_in_df(df=df_news, use_col_name_list=reference.TOP_NEWS_COL_NAME_LIST)
+        df_news_path = self.__export_df_as_csv_ignore_index(df=df_news,
+                                                            export_csv_path=reference.NEWS_CLEANED_EXPORT_PATH)
+        return df_news, df_news_path
 
+    def create_sentiment_positivity_negativity(self, df_news):
+        """
+        Create sentiment label, positivity scores, negativity scores in news data set.
+        Parameters
+        ----------
+        df_news : pd.DataFrame
+            pd.DataFrame. Pandas DataFrame with news data.
+        Returns
+        -------
+        df_news : pd.DataFrame
+            pd.DataFrame. Pandas DataFrame with news data.
+        df_news_path : str
+            str. Absolute path of export file of news data.
+        """
+        from textblob.en.sentiments import NaiveBayesAnalyzer
+        naive_bayes_analyzer = NaiveBayesAnalyzer()
 
-def create_sentiment_positivity_negativity(df_news):
-    from textblob.en.sentiments import NaiveBayesAnalyzer
-    naive_bayes_analyzer = NaiveBayesAnalyzer()
+        for news_col_name in reference.TOP_NEWS_COL_NAME_LIST:
+            df_news[news_col_name + '_label_pos_neg'] = [
+                naive_bayes_analyzer.analyze(news) for news in
+                df_news[news_col_name].astype('str')
+            ]
 
-    for news_col_name in reference.TOP_NEWS_COL_NAME_LIST:
-        df_news[news_col_name + '_label_pos_neg'] = [
-            naive_bayes_analyzer.analyze(news) for news in
-            df_news[news_col_name].astype('str')
-        ]
+        for news_col_name in reference.TOP_NEWS_COL_NAME_LIST:
+            df_news[news_col_name + reference.SENTIMENT_LABEL_COL_NAME_SUFFIX] = [
+                sentiment.classification for sentiment in
+                df_news[news_col_name + '_label_pos_neg']
+            ]
+            df_news[news_col_name + reference.POSITIVITY_SCORE_COL_NAME_SUFFIX] = [
+                sentiment.p_pos for sentiment in
+                df_news[news_col_name + '_label_pos_neg']
+            ]
+            df_news[news_col_name + reference.NEGATIVITY_SCORE_COL_NAME_SUFFIX] = [
+                sentiment.p_neg for sentiment in
+                df_news[news_col_name + '_label_pos_neg']
+            ]
 
-    for news_col_name in reference.TOP_NEWS_COL_NAME_LIST:
-        df_news[news_col_name + reference.SENTIMENT_LABEL_COL_NAME_SUFFIX] = [
-            sentiment.classification for sentiment in
-            df_news[news_col_name + '_label_pos_neg']
-        ]
-        df_news[news_col_name + reference.POSITIVITY_SCORE_COL_NAME_SUFFIX] = [
-            sentiment.p_pos for sentiment in
-            df_news[news_col_name + '_label_pos_neg']
-        ]
-        df_news[news_col_name + reference.NEGATIVITY_SCORE_COL_NAME_SUFFIX] = [
-            sentiment.p_neg for sentiment in
-            df_news[news_col_name + '_label_pos_neg']
-        ]
+        for col in df_news.columns:
+            if '_label_pos_neg' in col:
+                df_news = df_news.drop(col, axis=1)
 
-    for col in df_news.columns:
-        if '_label_pos_neg' in col:
-            df_news = df_news.drop(col, axis=1)
+        df_news_path = self.__export_df_as_csv_ignore_index(df=df_news,
+                                                            export_csv_path=reference.NEWS_SENTIMENT_01_EXPORT_PATH)
+        return df_news, df_news_path
 
-    df_news_path = export_df_as_csv_ignore_index(df=df_news, export_csv_path=reference.NEWS_SENTIMENT_01_EXPORT_PATH)
-    return df_news, df_news_path
+    def create_polarity_subjectivity(self, df_news):
+        """
+        Create polarity scores and subjectivity scores in news data set.
+        Parameters
+        ----------
+        df_news : pd.DataFrame
+            pd.DataFrame. Pandas DataFrame with news data.
+        Returns
+        -------
+        df_news : pd.DataFrame
+            pd.DataFrame. Pandas DataFrame with news data.
+        df_news_path : str
+            str. Absolute path of export file of news data.
+        """
+        from textblob.en.sentiments import PatternAnalyzer
+        pattern_analyzer = PatternAnalyzer()
 
+        for news_col_name in reference.TOP_NEWS_COL_NAME_LIST:
+            df_news[news_col_name + '_polar_subjective'] = [
+                pattern_analyzer.analyze(news) for news in
+                df_news[news_col_name].astype('str')
+            ]
 
-def create_polarity_subjectivity(df_news):
-    from textblob.en.sentiments import PatternAnalyzer
-    pattern_analyzer = PatternAnalyzer()
+        for news_col_name in reference.TOP_NEWS_COL_NAME_LIST:
+            df_news[news_col_name + reference.POLARITY_SCORE_COL_NAME_SUFFIX] = [
+                sentiment.polarity for sentiment in
+                df_news[news_col_name + '_polar_subjective']
+            ]
+            df_news[news_col_name + reference.SUBJECTIVITY_SCORE_COL_NAME_SUFFIX] = [
+                sentiment.subjectivity for sentiment in
+                df_news[news_col_name + '_polar_subjective']
+            ]
 
-    for news_col_name in reference.TOP_NEWS_COL_NAME_LIST:
-        df_news[news_col_name + '_polar_subjective'] = [
-            pattern_analyzer.analyze(news) for news in
-            df_news[news_col_name].astype('str')
-        ]
+        for col in df_news.columns:
+            if '_polar_subjective' in col:
+                df_news = df_news.drop(col, axis=1)
 
-    for news_col_name in reference.TOP_NEWS_COL_NAME_LIST:
-        df_news[news_col_name + reference.POLARITY_SCORE_COL_NAME_SUFFIX] = [
-            sentiment.polarity for sentiment in
-            df_news[news_col_name + '_polar_subjective']
-        ]
-        df_news[news_col_name + reference.SUBJECTIVITY_SCORE_COL_NAME_SUFFIX] = [
-            sentiment.subjectivity for sentiment in
-            df_news[news_col_name + '_polar_subjective']
-        ]
+        df_news_path = self.__export_df_as_csv_ignore_index(df=df_news,
+                                                            export_csv_path=reference.NEWS_SENTIMENT_02_EXPORT_PATH)
+        return df_news, df_news_path
 
-    for col in df_news.columns:
-        if '_polar_subjective' in col:
-            df_news = df_news.drop(col, axis=1)
+    def create_price_change_cols(self, ):
+        """
+        Create price change column in price data set.
+        Returns
+        -------
+        df_price : pd.DataFrame
+            pd.DataFrame. Pandas DataFrame with price data.
+        df_price_path : str
+            str. Absolute path of export file of price data.
+        """
+        df_price = self.__read_csv_regular(csv_file_path=reference.PRICE_INPUT_PATH)
+        df_price = df_price.sort_values(reference.TIME_STAMP_COL_NAME, ascending=True)
+        df_price[reference.PRICE_CHANGE_VALUE_COL_NAME] = df_price[reference.PRICE_CHANGE_BY_COL_NAME].astype(
+            'float').diff()
+        df_price[reference.PRICE_CHANGE_DIRECTION_COL_NAME] = np.where(
+            df_price[reference.PRICE_CHANGE_VALUE_COL_NAME] > 0,
+            1, -1)
+        df_price_path = self.__export_df_as_csv_ignore_index(df=df_price,
+                                                             export_csv_path=reference.PRICE_LABELED_EXPORT_PATH)
+        return df_price, df_price_path
 
-    df_news_path = export_df_as_csv_ignore_index(df=df_news, export_csv_path=reference.NEWS_SENTIMENT_02_EXPORT_PATH)
-    return df_news, df_news_path
+    def merge_format_price_news(self, df_price, df_news):
+        """
+        Merge sentiment data set to price data set.
+        Parameters
+        ----------
+        df_price : pd.DataFrame
+            pd.DataFrame. Pandas DataFrame with price data.
+        df_news : pd.DataFrame
+            pd.DataFrame. Pandas DataFrame with news data.
+        Returns
+        -------
+        df_merged : pd.DataFrame
+            pd.DataFrame. Pandas DataFrame with merged data.
+        df_merged_path : str
+            str. Absolute path of exported file with merged data.
+        """
+        df_price[reference.TIME_STAMP_COL_NAME] = pd.to_datetime(df_price[reference.TIME_STAMP_COL_NAME])
+        df_news[reference.TIME_STAMP_COL_NAME] = pd.to_datetime(df_news[reference.TIME_STAMP_COL_NAME])
+        df_merged = pd.merge(left=df_price, right=df_news,
+                             left_on=reference.TIME_STAMP_COL_NAME, right_on=reference.TIME_STAMP_COL_NAME, how='inner')
+        df_merged = df_merged.drop(reference.TOP_NEWS_COL_NAME_LIST, axis=1)
 
+        col_name_order_list = df_merged.columns.to_list()
+        col_name_order_list.remove(reference.PRICE_CHANGE_DIRECTION_COL_NAME)
+        col_name_order_list.append(reference.PRICE_CHANGE_DIRECTION_COL_NAME)
+        df_merged = df_merged[col_name_order_list]
 
-def create_price_change_cols():
-    df_price = read_csv_regular(csv_file_path=reference.PRICE_INPUT_PATH)
-    df_price = df_price.sort_values(reference.TIME_STAMP_COL_NAME, ascending=True)
-    df_price[reference.PRICE_CHANGE_VALUE_COL_NAME] = df_price[reference.PRICE_CHANGE_BY_COL_NAME].astype(
-        'float').diff()
-    df_price[reference.PRICE_CHANGE_DIRECTION_COL_NAME] = np.where(df_price[reference.PRICE_CHANGE_VALUE_COL_NAME] > 0,
-                                                                   1, -1)
-    df_price_path = export_df_as_csv_ignore_index(df=df_price, export_csv_path=reference.PRICE_LABELED_EXPORT_PATH)
-    return df_price, df_price_path
+        df_merged_path = self.__export_df_as_csv_ignore_index(df=df_merged,
+                                                              export_csv_path=reference.MERGED_DATA_EXPORT_PATH)
+        return df_merged, df_merged_path
 
-
-def merge_format_price_news(df_price, df_news):
-    df_price[reference.TIME_STAMP_COL_NAME] = pd.to_datetime(df_price[reference.TIME_STAMP_COL_NAME])
-    df_news[reference.TIME_STAMP_COL_NAME] = pd.to_datetime(df_news[reference.TIME_STAMP_COL_NAME])
-    df_merged = pd.merge(left=df_price, right=df_news,
-                         left_on=reference.TIME_STAMP_COL_NAME, right_on=reference.TIME_STAMP_COL_NAME, how='inner')
-    df_merged = df_merged.drop(reference.TOP_NEWS_COL_NAME_LIST, axis=1)
-
-    col_name_order_list = df_merged.columns.to_list()
-    col_name_order_list.remove(reference.PRICE_CHANGE_DIRECTION_COL_NAME)
-    col_name_order_list.append(reference.PRICE_CHANGE_DIRECTION_COL_NAME)
-    df_merged = df_merged[col_name_order_list]
-
-    df_merged_path = export_df_as_csv_ignore_index(df=df_merged, export_csv_path=reference.MERGED_DATA_EXPORT_PATH)
-    return df_merged, df_merged_path
-
-
-def convert_data_type(df_merged):
-    df_merged[reference.TIME_STAMP_COL_NAME] = pd.to_datetime(df_merged[reference.TIME_STAMP_COL_NAME])
-    df_merged[reference.NUMERIC_COL_NAME_LIST] = df_merged[reference.NUMERIC_COL_NAME_LIST].astype('float')
-    df_merged[reference.CATEGORICAL_COL_NAME_LIST] = df_merged[reference.CATEGORICAL_COL_NAME_LIST].astype('str')
-    return df_merged
+    def convert_data_type(self, df_merged):
+        """
+        Convert data type in merged data set for modeling.
+        Parameters
+        ----------
+        df_merged : pd.DataFrame
+            pd.DataFrame. Pandas DataFrame with merged data.
+        Returns
+        -------
+        df_merged : pd.DataFrame
+            pd.DataFrame. Pandas DataFrame with converted data types.
+        """
+        df_merged[reference.TIME_STAMP_COL_NAME] = pd.to_datetime(df_merged[reference.TIME_STAMP_COL_NAME])
+        df_merged[reference.NUMERIC_COL_NAME_LIST] = df_merged[reference.NUMERIC_COL_NAME_LIST].astype('float')
+        df_merged[reference.CATEGORICAL_COL_NAME_LIST] = df_merged[reference.CATEGORICAL_COL_NAME_LIST].astype('str')
+        return df_merged

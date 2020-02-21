@@ -202,4 +202,3 @@ CATEGORICAL_COL_NAME_LIST = [
     'Top24_sentiment',
     'Top25_sentiment'
 ]
-
