@@ -64,6 +64,8 @@ MERGED_DATA_EXPORT_PATH = 'data/price_headline_sentiment.csv'
 
 TIME_STAMP_COL_NAME = 'Date'
 
+NORMALIZED_DATA_EXPORT_PATH = 'data/model_data_normalized.csv'
+
 NUMERIC_COL_NAME_LIST = [
     'Open',
     'High',
@@ -172,7 +174,6 @@ NUMERIC_COL_NAME_LIST = [
     'Top24_subjectivity',
     'Top25_polarity',
     'Top25_subjectivity',
-    'change_direction'
 ]
 
 CATEGORICAL_COL_NAME_LIST = [
@@ -200,5 +201,5 @@ CATEGORICAL_COL_NAME_LIST = [
     'Top22_sentiment',
     'Top23_sentiment',
     'Top24_sentiment',
-    'Top25_sentiment'
+    'Top25_sentiment',
 ]

@@ -199,7 +199,7 @@ class ProjectUtils(object):
             'float').diff()
         df_price[reference.PRICE_CHANGE_DIRECTION_COL_NAME] = np.where(
             df_price[reference.PRICE_CHANGE_VALUE_COL_NAME] > 0,
-            1, -1)
+            1, 0)
         df_price_path = self.__export_df_as_csv_ignore_index(df=df_price,
                                                              export_csv_path=reference.PRICE_LABELED_EXPORT_PATH)
         return df_price, df_price_path
@@ -251,3 +251,31 @@ class ProjectUtils(object):
         df_merged[reference.NUMERIC_COL_NAME_LIST] = df_merged[reference.NUMERIC_COL_NAME_LIST].astype('float')
         df_merged[reference.CATEGORICAL_COL_NAME_LIST] = df_merged[reference.CATEGORICAL_COL_NAME_LIST].astype('str')
         return df_merged
+
+    def normalize_df_merged(self, df_merged):
+        """
+        Normalize feature columns.
+        Continuous numerical columns will conform to a standard Gaussian distribution.
+        Categorical columns will conform to a binary encoding.
+        Parameters
+        ----------
+        df_merged : pd.DataFrame
+            pd.DataFrame. Pandas DataFrame with merged data.
+        Returns
+        -------
+        df_normalized : pd.DataFrame
+            pd.DataFrame. Pandas DataFrame with normalized data.
+        df_normalized_path : str
+            str. Absolute path of exported file with normalized data.
+        """
+        df_normalized = df_merged.copy()
+        from sklearn.preprocessing import StandardScaler
+        standard_scaler = StandardScaler()
+        df_normalized[reference.NUMERIC_COL_NAME_LIST] = (
+            standard_scaler.fit_transform(df_normalized[reference.NUMERIC_COL_NAME_LIST]))
+        for categorical_col_name in reference.CATEGORICAL_COL_NAME_LIST:
+            df_normalized[categorical_col_name] = np.where(df_normalized[categorical_col_name] == 'pos', 1, 0)
+        df_normalized_path = self.__export_df_as_csv_ignore_index(
+            df=df_normalized,
+            export_csv_path=reference.NORMALIZED_DATA_EXPORT_PATH)
+        return df_normalized, df_normalized_path
