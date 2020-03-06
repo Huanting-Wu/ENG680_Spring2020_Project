@@ -31,3 +31,5 @@ if __name__ == '__main__':
     df_normalized, df_normalized_path = utils.normalize_df_merged(df_merged=df_merged)
 
     print('df_normalized_path:', df_normalized_path)
+
+    x_train, x_dev, x_test, y_train, y_dev, y_test = utils.read_split_model_data(model_data_path=df_normalized_path)

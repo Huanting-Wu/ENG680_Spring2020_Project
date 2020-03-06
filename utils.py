@@ -279,3 +279,43 @@ class ProjectUtils(object):
             df=df_normalized,
             export_csv_path=reference.NORMALIZED_DATA_EXPORT_PATH)
         return df_normalized, df_normalized_path
+
+    def read_split_model_data(self, model_data_path):
+        """
+        Read model data from path and split data into x and y sets, and train, dev, and test sets.
+        Parameters
+        ----------
+        model_data_path : str
+            str. Absolute file path of model data.
+        Returns
+        -------
+        x_train : pd.DataFrame
+            pd.DataFrame. X training set.
+        x_dev : pd.DataFrame
+            pd.DataFrame. X development set.
+        x_test : pd.DataFrame
+            pd.DataFrame. X testing set.
+        y_train : pd.DataFrame
+            pd.DataFrame. Y training set.
+        y_dev : pd.DataFrame
+            pd.DataFrame. Y development set.
+        y_test : pd.DataFrame
+            pd.DataFrame. Y testing set.
+        """
+        df = pd.read_csv(model_data_path).fillna(0)
+
+        X = df[df.columns[1:-1]]
+        y = df[df.columns[-1]]
+        print("X shape:", X.shape)
+        print("y shape:", y.shape)
+
+        x_train, x_dev, x_test = np.split(X, [int(.8 * len(X)), int(.9 * len(X))])
+        print("X_train shape:", x_train.shape)
+        print("X_dev shape:", x_dev.shape)
+        print("X_test shape:", x_test.shape)
+
+        y_train, y_dev, y_test = np.split(y, [int(.8 * len(y)), int(.9 * len(y))])
+        print("y_train shape:", y_train.shape)
+        print("y_dev shape:", y_dev.shape)
+        print("y_test shape:", y_test.shape)
+        return x_train, x_dev, x_test, y_train, y_dev, y_test
