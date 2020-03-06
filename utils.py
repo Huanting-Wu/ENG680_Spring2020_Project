@@ -340,7 +340,7 @@ class ProjectUtils(object):
                       }
         return model_dict
 
-    def measure_accuracy(self, trained_model, x_dev, x_test, y_dev, y_test):
+    def __measure_accuracy(self, trained_model, x_dev, x_test, y_dev, y_test):
         """
         Measure accuracy score as probability from a trained model on dev and test sets.
         Parameters
@@ -364,6 +364,90 @@ class ProjectUtils(object):
         """
         accuracy_dev = trained_model.score(x_dev, y_dev)
         accuracy_test = trained_model.score(x_test, y_test)
-        print("accuracy dev set:", accuracy_dev)
-        print("accuracy test set:", accuracy_test)
         return accuracy_dev, accuracy_test
+
+    def __get_confusion_matrix(self, trained_model, x_dev, x_test, y_dev, y_test):
+        """
+        Get confusion matrix of a trained model for dev and test set.
+        Parameters
+        ----------
+        trained_model : sklearn object
+            sklearn object. A model that is fitted on training set.
+        x_dev : pd.DataFrame
+            pd.DataFrame. X development set.
+        x_test : pd.DataFrame
+            pd.DataFrame. X testing set.
+        y_dev : pd.DataFrame
+            pd.DataFrame. Y development set.
+        y_test : pd.DataFrame
+            pd.DataFrame. Y testing set.
+        Returns
+        -------
+        confusion_matrix_dev : np.array
+            np.array. Confusion matrix on dev set.
+        confusion_matrix_test : np.array
+            np.array. Confusion matrix on test set.
+        """
+        from sklearn.metrics import confusion_matrix
+        y_dev_pred = trained_model.predict(x_dev)
+        y_test_pred = trained_model.predict(x_test)
+        confusion_matrix_dev = confusion_matrix(y_dev, y_dev_pred)
+        confusion_matrix_test = confusion_matrix(y_test, y_test_pred)
+        return confusion_matrix_dev, confusion_matrix_test
+
+    def fit_and_measure(self, x_train, x_dev, x_test, y_train, y_dev, y_test):
+        """
+        Fit a model and measure its accuracy and confusion matrix.
+        This is main method for prediction.
+        Parameters
+        ----------
+        x_train : pd.DataFrame
+            pd.DataFrame. X training set.
+        x_dev : pd.DataFrame
+            pd.DataFrame. X development set.
+        x_test : pd.DataFrame
+            pd.DataFrame. X testing set.
+        y_train : pd.DataFrame
+            pd.DataFrame. Y training set.
+        y_dev : pd.DataFrame
+            pd.DataFrame. Y development set.
+        y_test : pd.DataFrame
+            pd.DataFrame. Y testing set.
+        Returns
+        -------
+        accuracy_dict : dict
+            dict. Dictionary of key-value pair in format
+            `"model name": {"accuracy dev": accuracy_dev, "accuracy test": accuracy_test}
+        confusion_matrix_dict : dict
+            dict. Dictionary of key-value pair in format
+            `"model name": {"confusion matrix dev": accuracy_dev, "confusion matrix test": accuracy_test}
+        """
+        model_dict = self.get_classifier_dict()
+        accuracy_dict = {}
+        confusion_matrix_dict = {}
+        for model_name, model in zip(model_dict.keys(), model_dict.values()):
+            print("model name:", model_name)
+            trained_model = model.fit(x_train, y_train)
+            accuracy_dev, accuracy_test = self.__measure_accuracy(
+                trained_model=trained_model,
+                x_dev=x_dev,
+                x_test=x_test,
+                y_dev=y_dev,
+                y_test=y_test
+            )
+            print("accuracy dev set:", accuracy_dev)
+            print("accuracy test set:", accuracy_test)
+            accuracy_dict.update({model_name: {"accuracy dev set": accuracy_dev,
+                                               "accuracy test set": accuracy_test}})
+            confusion_matrix_dev, confusion_matrix_test = self.__get_confusion_matrix(
+                trained_model=trained_model,
+                x_dev=x_dev,
+                x_test=x_test,
+                y_dev=y_dev,
+                y_test=y_test
+            )
+            print("consusion matrix dev set:\n", confusion_matrix_dev)
+            print("consusion matrix test set:\n", confusion_matrix_test)
+            confusion_matrix_dict.update({model_name: {"confusion matrix dev set": confusion_matrix_dev,
+                                                       "confusion matrix test set": confusion_matrix_test}})
+        return accuracy_dict, confusion_matrix_dict

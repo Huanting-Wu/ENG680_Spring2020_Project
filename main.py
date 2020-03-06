@@ -36,11 +36,11 @@ if __name__ == '__main__':
 
     model_dict = utils.get_classifier_dict()
 
-    for model_name, model in zip(model_dict.keys(), model_dict.values()):
-        print("model name:", model_name)
-        trained_model = model.fit(x_train, y_train)
-        accuracy_dev, accuracy_test = utils.measure_accuracy(trained_model=trained_model,
-                                                             x_dev=x_dev,
-                                                             x_test=x_test,
-                                                             y_dev=y_dev,
-                                                             y_test=y_test)
+    accuracy_dict, confusion_matrix_dict = utils.fit_and_measure(
+        x_train=x_train,
+        x_dev=x_dev,
+        x_test=x_test,
+        y_train=y_train,
+        y_dev=y_dev,
+        y_test=y_test
+    )
