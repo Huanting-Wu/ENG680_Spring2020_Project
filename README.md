@@ -12,7 +12,7 @@ Jasjit Samra
 
 Huanting Wu
 
-# Applying NLP on News Headlines for Stock Market Prediction
+## Applying NLP on News Headlines for Stock Market Prediction
 
 The volatility of the stock market is hard to predict, but it is not impossible. By using a Natural Language Processing 
 (NLP) based model that uses news article headlines to predict the movements in the stock market, we will be able to 
