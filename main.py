@@ -33,3 +33,14 @@ if __name__ == '__main__':
     print('df_normalized_path:', df_normalized_path)
 
     x_train, x_dev, x_test, y_train, y_dev, y_test = utils.read_split_model_data(model_data_path=df_normalized_path)
+
+    model_dict = utils.get_classifier_dict()
+
+    for model_name, model in zip(model_dict.keys(), model_dict.values()):
+        print("model name:", model_name)
+        trained_model = model.fit(x_train, y_train)
+        accuracy_dev, accuracy_test = utils.measure_accuracy(trained_model=trained_model,
+                                                             x_dev=x_dev,
+                                                             x_test=x_test,
+                                                             y_dev=y_dev,
+                                                             y_test=y_test)

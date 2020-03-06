@@ -319,3 +319,51 @@ class ProjectUtils(object):
         print("y_dev shape:", y_dev.shape)
         print("y_test shape:", y_test.shape)
         return x_train, x_dev, x_test, y_train, y_dev, y_test
+
+    def get_classifier_dict(self):
+        """
+        Create a dictionary of key-value pair as `model_name : model object`.
+        Returns
+        -------
+        model_dict : dict
+            dict. A dictionary of key-value pair as `model_name : model object`.
+        """
+        from sklearn.linear_model import LogisticRegression
+        logistic_regression = LogisticRegression(random_state=42, solver="lbfgs")
+        from sklearn.ensemble import RandomForestClassifier
+        random_forest = RandomForestClassifier(random_state=42)
+        from sklearn.ensemble import GradientBoostingClassifier
+        gradient_boosting = GradientBoostingClassifier(random_state=42)
+        model_dict = {"logistic regression": logistic_regression,
+                      "random forest": random_forest,
+                      "gradient boosting": gradient_boosting
+                      }
+        return model_dict
+
+    def measure_accuracy(self, trained_model, x_dev, x_test, y_dev, y_test):
+        """
+        Measure accuracy score as probability from a trained model on dev and test sets.
+        Parameters
+        ----------
+        trained_model : sklearn object
+            sklearn object. A model that is fitted on training set.
+        x_dev : pd.DataFrame
+            pd.DataFrame. X development set.
+        x_test : pd.DataFrame
+            pd.DataFrame. X testing set.
+        y_dev : pd.DataFrame
+            pd.DataFrame. Y development set.
+        y_test : pd.DataFrame
+            pd.DataFrame. Y testing set.
+        Returns
+        -------
+        accuracy_dev : float
+            float. Accuracy score on development set as probability
+        accuracy_test : float
+            float. Accuracy score on testing set as probability
+        """
+        accuracy_dev = trained_model.score(x_dev, y_dev)
+        accuracy_test = trained_model.score(x_test, y_test)
+        print("accuracy dev set:", accuracy_dev)
+        print("accuracy test set:", accuracy_test)
+        return accuracy_dev, accuracy_test
