@@ -66,6 +66,8 @@ TIME_STAMP_COL_NAME = 'Date'
 
 NORMALIZED_DATA_EXPORT_PATH = 'data/model_data_normalized.csv'
 
+LOGISTIC_FEATURE_WEIGHT_EXPORT_PATH = "data/logistic_feature_weight.csv"
+
 NUMERIC_COL_NAME_LIST = [
     'Open',
     'High',

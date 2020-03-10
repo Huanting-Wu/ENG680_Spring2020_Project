@@ -340,6 +340,30 @@ class ProjectUtils(object):
                       }
         return model_dict
 
+    def __get_feature_weight_logistic(self, df, trained_logistic_model):
+        """
+        Get feature name and their weight from Logistic Regression model.
+        Parameters
+        ----------
+        df : pd.DataFrame
+            pd.DataFrame. Pandas DataFrame with feature names.
+        trained_logistic_model : sklearn object
+            sklearn object. A fitted Logistic Regression model.
+        Returns
+        -------
+        df_feature_weight : pd.DataFrame
+            pd.DataFrame. Pandas DataFrame with feature column and weight column sorted by weight value decendingly.
+        """
+        feature_weight_dict = {}
+        for feature, weight in zip(df.columns.to_list(), trained_logistic_model.coef_[0]):
+            feature_weight_dict.update({feature: weight})
+        df_feature_weight = pd.DataFrame(feature_weight_dict.items(), columns=("Feature", "Weight")).sort_values(
+            "Weight", ascending=False)
+        print("Top 5 features and their weights:")
+        print(df_feature_weight.head())
+        df_feature_weight.to_csv(reference.LOGISTIC_FEATURE_WEIGHT_EXPORT_PATH)
+        return df_feature_weight
+
     def __measure_accuracy(self, trained_model, x_dev, x_test, y_dev, y_test):
         """
         Measure accuracy score as probability from a trained model on dev and test sets.
@@ -450,4 +474,6 @@ class ProjectUtils(object):
             print("consusion matrix test set:\n", confusion_matrix_test)
             confusion_matrix_dict.update({model_name: {"confusion matrix dev set": confusion_matrix_dev,
                                                        "confusion matrix test set": confusion_matrix_test}})
+            if model_name == "logistic regression":
+                self.__get_feature_weight_logistic(df=x_train, trained_logistic_model=trained_model)
         return accuracy_dict, confusion_matrix_dict
