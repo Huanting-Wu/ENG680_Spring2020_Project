@@ -471,7 +471,13 @@ class ProjectUtils(object):
                 y_test=y_test
             )
             print("consusion matrix dev set:\n", confusion_matrix_dev)
+            print("true positive rate dev set:\n", confusion_matrix_dev[0][0] / (np.sum(confusion_matrix_dev[0])))
+            print("true negative rate dev set:\n", confusion_matrix_dev[1][1] / (np.sum(confusion_matrix_dev[1])))
+
             print("consusion matrix test set:\n", confusion_matrix_test)
+            print("true positive rate test set:\n", confusion_matrix_test[0][0]/(np.sum(confusion_matrix_test[0])))
+            print("true negative rate test set:\n", confusion_matrix_test[1][1] / (np.sum(confusion_matrix_test[1])))
+
             confusion_matrix_dict.update({model_name: {"confusion matrix dev set": confusion_matrix_dev,
                                                        "confusion matrix test set": confusion_matrix_test}})
             if model_name == "logistic regression":
